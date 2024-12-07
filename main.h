@@ -11,17 +11,27 @@
 #include <semaphore.h>
 #include <stdlib.h>
 
-// Définition de l'énumération des ressources
-typedef enum {
+// Définition des ressources
+typedef struct Ressources {
+    int bois;
+    int pierre;
+    int fer;
+    int or;
+    int diamant;
+    sem_t semaphore;
+} Ressources;
+
+// Constantes pour identifier les types de ressources
+enum {
     BOIS,
     PIERRE,
     FER,
     OR,
-    DIAMANT,
-    NB_RESSOURCES // Nombre total de ressources
-} Ressource;
+    DIAMANT
+};
 
-// Déclaration des fonctions
+// Prototypes des fonctions
+void *thread_ouvrier(void *arg);
 void clearScreen();
 void recupererRessources();
 void vendreRessources();
@@ -29,8 +39,9 @@ void gererOuvriers();
 void fabriquerOutils();
 void ameliorerOuvriers();
 void affecterOuvriers();
-void vendreQuantite(Ressource ressource);
+void vendreQuantite(int ressource);
 void fabriquerPioche();
 void fabriquerHache();
+void afficherRessources(Ressources *ressources);
 
 #endif // MAIN_H
