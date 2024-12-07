@@ -22,20 +22,18 @@ void *thread_ouvrier(void *arg)
         // Accès exclusif à la mémoire partagée
         sem_wait(&ressources->semaphore);
         ressources->bois += 10; // Ajouter 10 unités de bois
-        //printf("Ouvrier a ajouté 10 unités de bois. Total bois : %d\n", ressources->bois);
+        // printf("Ouvrier a ajouté 10 unités de bois. Total bois : %d\n", ressources->bois);
         sem_post(&ressources->semaphore);
     }
 
     return NULL;
 }
 
-void *ouvrirTerminalAffichage(void *arg)
+void *ouvrirTerminalAffichage()
 {
-    //system("xterm -e ./affichage &");
+    // system("xterm -e ./affichage &");
     return NULL;
 }
-
-
 
 void clearScreen()
 {
@@ -47,7 +45,20 @@ void clearScreen()
 #endif
 }
 
-void recupererRessources()
+void afficherBarreChargement(int duree) {
+    int largeurBarre = 30; // Nombre de segments de la barre
+    int interval = duree * 1000000 / largeurBarre; // Durée par segment (en microsecondes)
+
+    printf("[");
+    for (int i = 0; i < largeurBarre; i++) {
+        usleep(interval); // Pause pour simuler le chargement
+        printf("#");
+        fflush(stdout); // Force l'affichage immédiat
+    }
+    printf("] Terminé !\n");
+}
+
+void recupererRessources(Joueur *joueur, int *ressources)
 {
     int choixRessource;
     while (1)
@@ -67,6 +78,7 @@ void recupererRessources()
         {
         case 1:
             printf("Vous coupez du bois.\n");
+            recolterRessource(joueur, ressources, BOIS);
             break;
         case 2:
             printf("Vous minez de la pierre.\n");
@@ -419,7 +431,50 @@ void fabriquerHache()
     }
 }
 
-void afficherRessources(Ressources *ressources) {
+// Fonction pour obtenir le nom d'une ressource
+const char *getNomRessource(RessourceType type)
+{
+    const char *noms[] = {"Bois", "Pierre", "Fer", "Or", "Diamant"};
+    return noms[type];
+}
+
+void recolterRessource(Joueur *joueur, int *ressources, RessourceType type) {
+    int quantite = 1; // Quantité par défaut
+
+    // Ajuster la quantité récoltée selon l'outil
+    if (joueur->outil.type == HACHE && type == BOIS) {
+        quantite *= (joueur->outil.niveau + 1); // Double la récolte pour chaque niveau
+    } else if (joueur->outil.type == PIOCHE && type != BOIS) {
+        quantite *= (joueur->outil.niveau + 1); // Double la récolte pour chaque niveau
+    }
+
+    printf("Récolte en cours : %s...\n", getNomRessource(type));
+    afficherBarreChargement(joueur->recolteTemps); // Affiche la barre de progression
+    ressources[type] += quantite;
+    printf("Vous avez récolté %d unité(s) de %s. Total : %d\n", quantite, getNomRessource(type), ressources[type]);
+}
+
+// Fonction pour fabriquer un outil
+void fabriquerOutil(Joueur *joueur, int *ressources, OutilType outilType, int niveau)
+{
+    const int cout[] = {30, 50, 80, 100}; // Coût pour chaque niveau
+    if (ressources[BOIS] < cout[niveau - 1])
+    {
+        printf("Pas assez de bois pour fabriquer l'outil !\n");
+        return;
+    }
+
+    ressources[BOIS] -= cout[niveau - 1];
+    joueur->outil.type = outilType;
+    joueur->outil.niveau = niveau;
+
+    printf("Vous avez fabriqué un %s de niveau %d.\n",
+           outilType == HACHE ? "hache" : "pioche",
+           niveau);
+}
+
+void afficherRessources(Ressources *ressources)
+{
     sem_wait(&ressources->semaphore);
     printf("Ressources actuelles :\n");
     printf("Bois : %d\n", ressources->bois);
@@ -432,18 +487,24 @@ void afficherRessources(Ressources *ressources) {
     getchar();
 }
 
-int main(int argc, char *argv[]) {
+int main()
+{
+
+    Joueur joueur = {{MAIN, 0}, 5}; // Joueur avec main par défaut et 5 secondes par récolte
+
     // Clé pour la mémoire partagée
     const char *pathname = "README.md";
     key_t key = ftok(pathname, 7171);
-    if (key == -1) {
+    if (key == -1)
+    {
         perror("ftok");
         return 1;
     }
 
     // Création ou récupération du segment de mémoire partagée
     int shmid = shmget(key, sizeof(Ressources), IPC_CREAT | 0666);
-    if (shmid == -1) {
+    if (shmid == -1)
+    {
         perror("shmget");
         return 1;
     }
@@ -451,7 +512,8 @@ int main(int argc, char *argv[]) {
 
     // Attachement au segment de mémoire partagée
     Ressources *ressources = (Ressources *)shmat(shmid, NULL, 0);
-    if (ressources == (void *)-1) {
+    if (ressources == (void *)-1)
+    {
         perror("shmat");
         return 1;
     }
@@ -465,8 +527,10 @@ int main(int argc, char *argv[]) {
     sem_init(&ressources->semaphore, 1, 1); // Sémaphore partagé entre processus
 
     // Création d'un thread ouvrier
+    /*
     pthread_t ouvrier;
     pthread_create(&ouvrier, NULL, thread_ouvrier, ressources);
+    */
 
     // Lancer un nouveau terminal pour l'affichage
     pthread_t affichageThread;
@@ -474,7 +538,8 @@ int main(int argc, char *argv[]) {
 
     int choix;
 
-    while (1) {
+    while (1)
+    {
         clearScreen();
         printf("\n=== Menu Principal ===\n");
         printf("1 - Récupérer ressources\n");
@@ -486,9 +551,10 @@ int main(int argc, char *argv[]) {
         printf("Votre choix : ");
         scanf("%d", &choix);
 
-        switch (choix) {
+        switch (choix)
+        {
         case 1:
-            recupererRessources();
+            recupererRessources(&joueur, ressources);
             break;
         case 2:
             vendreRessources();
@@ -504,13 +570,15 @@ int main(int argc, char *argv[]) {
             break;
         case 0:
             printf("Au revoir !\n");
-            pthread_cancel(ouvrier);
-            pthread_join(ouvrier, NULL);
+            // pthread_cancel(ouvrier);
+            // pthread_join(ouvrier, NULL);
             sem_destroy(&ressources->semaphore);
-            if (shmdt(ressources) == -1) {
+            if (shmdt(ressources) == -1)
+            {
                 perror("shmdt");
             }
-            if (shmctl(shmid, IPC_RMID, NULL) == -1) {
+            if (shmctl(shmid, IPC_RMID, NULL) == -1)
+            {
                 perror("shmctl");
             }
             printf("Segment de mémoire supprimé.\n");
