@@ -18,8 +18,20 @@ typedef struct Ressources {
     int fer;
     int or;
     int diamant;
+    int argent;
     sem_t semaphore;
 } Ressources;
+
+// Structure représentant les coûts de fabrication
+typedef struct {
+    int bois;    // Quantité de bois nécessaire
+    int pierre;  // Quantité de pierre nécessaire
+    int fer;     // Quantité de fer nécessaire
+    int or;      // Quantité d'or nécessaire
+    int diamant; // Quantité de diamant nécessaire
+    int argent;  // Quantité d'argent nécessaire
+} CoutFabrication;
+
 
 // Constantes pour identifier les types de ressources
 typedef enum {
@@ -28,6 +40,7 @@ typedef enum {
     FER,
     OR,
     DIAMANT,
+    ARGENT, // Ressource utilisée pour l'argent du jeu
     NB_RESSOURCES // Utilisé pour dimensionner les tableaux
 } RessourceType;
 
@@ -46,26 +59,28 @@ typedef struct {
 
 // Structure représentant un joueur
 typedef struct {
-    Outil outil;     // L'outil actuellement utilisé par le joueur
-    int recolteTemps; // Temps pour récolter une ressource
+    int niveauHache;     // Niveau de la hache (0 = pas de hache)
+    int niveauPioche;    // Niveau de la pioche (0 = pas de pioche)
+    int recolteTemps;    // Temps pour récolter une ressource
 } Joueur;
+
 
 
 // Prototypes des fonctions
 void *thread_ouvrier(void *arg);
 void clearScreen();
-void recupererRessources(Joueur *joueur, int *ressources);
+void recupererRessources(Joueur *joueur, Ressources *ressources);
 void vendreRessources();
 void gererOuvriers();
-void fabriquerOutils();
 void ameliorerOuvriers();
 void affecterOuvriers();
 void vendreQuantite(int ressource);
-void fabriquerPioche();
-void fabriquerHache();
+void fabriquerOutils(Joueur *joueur, Ressources *ressources);
+void fabriquerPioche(Joueur *joueur, Ressources *ressources);
+void fabriquerHache(Joueur *joueur, Ressources *ressources);
 void afficherRessources(Ressources *ressources);
 const char* getNomRessource(RessourceType type);
-void recolterRessource(Joueur *joueur, int *ressources, RessourceType type);
+void recolterRessource(Joueur *joueur, Ressources *ressources, RessourceType type);
 
 
 #endif // MAIN_H

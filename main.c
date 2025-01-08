@@ -1,12 +1,13 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "pthread.h"
 #include <string.h>
 #include <unistd.h>
 #include <semaphore.h>
-#include <stdlib.h>
 #include "main.h"
 
 // Fonction d'un ouvrier
@@ -45,12 +46,14 @@ void clearScreen()
 #endif
 }
 
-void afficherBarreChargement(int duree) {
-    int largeurBarre = 30; // Nombre de segments de la barre
+void afficherBarreChargement(int duree)
+{
+    int largeurBarre = 30;                         // Nombre de segments de la barre
     int interval = duree * 1000000 / largeurBarre; // Durée par segment (en microsecondes)
 
     printf("[");
-    for (int i = 0; i < largeurBarre; i++) {
+    for (int i = 0; i < largeurBarre; i++)
+    {
         usleep(interval); // Pause pour simuler le chargement
         printf("#");
         fflush(stdout); // Force l'affichage immédiat
@@ -58,7 +61,114 @@ void afficherBarreChargement(int duree) {
     printf("] Terminé !\n");
 }
 
-void recupererRessources(Joueur *joueur, int *ressources)
+CoutFabrication getCoutFabrication(OutilType type, int niveau)
+{
+    CoutFabrication cout = {0, 0, 0, 0, 0};
+    if (type == PIOCHE)
+    {
+        switch (niveau)
+        {
+        case 1: // Bois
+            cout.bois = 20;
+            break;
+        case 2: // Pierre
+            cout.bois = 20;
+            cout.pierre = 30;
+            break;
+        case 3: // Fer
+            cout.bois = 30;
+            cout.pierre = 50;
+            cout.fer = 20;
+            break;
+        case 4: // Or
+            cout.bois = 40;
+            cout.pierre = 60;
+            cout.fer = 30;
+            cout.or = 20;
+            break;
+        case 5: // Diamant
+            cout.bois = 50;
+            cout.pierre = 80;
+            cout.fer = 40;
+            cout.diamant = 20;
+            break;
+        }
+    }
+    else if (type == HACHE)
+    {
+        // Même logique pour la hache (adapter les coûts si nécessaire)
+        switch (niveau)
+        {
+        case 1:
+            cout.bois = 20;
+            break;
+        case 2:
+            cout.bois = 20;
+            cout.pierre = 30;
+            break;
+        case 3:
+            cout.bois = 30;
+            cout.pierre = 50;
+            cout.fer = 20;
+            break;
+        case 4:
+            cout.bois = 40;
+            cout.pierre = 60;
+            cout.fer = 30;
+            cout.or = 20;
+            break;
+        case 5:
+            cout.bois = 50;
+            cout.pierre = 80;
+            cout.fer = 40;
+            cout.diamant = 20;
+            break;
+        }
+    }
+    return cout;
+}
+
+int verifierEtConsommerRessources(Ressources *ressources, CoutFabrication cout)
+{
+    if (ressources->bois < cout.bois || ressources->pierre < cout.pierre ||
+        ressources->fer < cout.fer || ressources->or < cout.or || ressources->diamant < cout.diamant)
+    {
+        printf("Ressources insuffisantes !\n");
+        // Afficher les ressources manquantes
+        printf("Il vous manque :\n");
+        if (ressources->bois < cout.bois)
+        {
+            printf("Bois : %d\n", cout.bois - ressources->bois);
+        }
+        if (ressources->pierre < cout.pierre)
+        {
+            printf("Pierre : %d\n", cout.pierre - ressources->pierre);
+        }
+        if (ressources->fer < cout.fer)
+        {
+            printf("Fer : %d\n", cout.fer - ressources->fer);
+        }
+        if (ressources->or < cout.or)
+        {
+            printf("Or : %d\n", cout.or -ressources->or);
+        }
+        if (ressources->diamant < cout.diamant)
+        {
+            printf("Diamant : %d\n", cout.diamant - ressources->diamant);
+        }
+        return 0;
+    }
+
+    // Consommer les ressources
+    ressources->bois -= cout.bois;
+    ressources->pierre -= cout.pierre;
+    ressources->fer -= cout.fer;
+    ressources->or -= cout.or ;
+    ressources->diamant -= cout.diamant;
+    return 1;
+}
+
+void recupererRessources(Joueur *joueur, Ressources *ressources)
 {
     int choixRessource;
     while (1)
@@ -77,20 +187,24 @@ void recupererRessources(Joueur *joueur, int *ressources)
         switch (choixRessource)
         {
         case 1:
-            printf("Vous coupez du bois.\n");
+            // printf("Vous coupez du bois.\n");
             recolterRessource(joueur, ressources, BOIS);
             break;
         case 2:
-            printf("Vous minez de la pierre.\n");
+            // printf("Vous minez de la pierre.\n");
+            recolterRessource(joueur, ressources, PIERRE);
             break;
         case 3:
-            printf("Vous minez du fer.\n");
+            // printf("Vous minez du fer.\n");
+            recolterRessource(joueur, ressources, FER);
             break;
         case 4:
-            printf("Vous minez de l'or.\n");
+            // printf("Vous minez de l'or.\n");
+            recolterRessource(joueur, ressources, OR);
             break;
         case 5:
-            printf("Vous minez du diamant.\n");
+            // printf("Vous minez du diamant.\n");
+            recolterRessource(joueur, ressources, DIAMANT);
             break;
         case 0:
             printf("Vous sortez du Menu Ressources !\n");
@@ -99,9 +213,6 @@ void recupererRessources(Joueur *joueur, int *ressources)
             printf("Choix invalide. Veuillez réessayer.\n");
             break;
         }
-        printf("\nAppuyez sur Entrée pour continuer...");
-        getchar();
-        getchar(); // Pause avant le rafraîchissement
     }
 }
 
@@ -180,40 +291,6 @@ void gererOuvriers()
             break;
         case 0:
             printf("Vous sortez du Menu Ouvrier !\n");
-            return;
-        default:
-            printf("Choix invalide. Veuillez réessayer.\n");
-            break;
-        }
-        printf("\nAppuyez sur Entrée pour continuer...");
-        getchar();
-        getchar(); // Pause avant le rafraîchissement
-    }
-}
-
-void fabriquerOutils()
-{
-    int choixOutils;
-    while (1)
-    {
-        clearScreen(); // Rafraîchit l'écran
-        printf("\n=== Menu Outils ===\n");
-        printf("1 - Fabriquer une pioche\n");
-        printf("2 - Fabriquer une hache\n");
-        printf("0 - Quitter\n");
-        printf("Votre choix : ");
-        scanf("%d", &choixOutils);
-
-        switch (choixOutils)
-        {
-        case 1:
-            fabriquerPioche();
-            break;
-        case 2:
-            fabriquerHache();
-            break;
-        case 0:
-            printf("Vous sortez du Menu Outils !\n");
             return;
         default:
             printf("Choix invalide. Veuillez réessayer.\n");
@@ -329,7 +406,38 @@ void vendreQuantite(int ressource)
     }
 }
 
-void fabriquerPioche()
+void fabriquerOutils(Joueur *joueur, Ressources *ressources)
+{
+    int choixOutils;
+    while (1)
+    {
+        clearScreen(); // Rafraîchit l'écran
+        printf("\n=== Menu Outils ===\n");
+        printf("1 - Fabriquer une pioche\n");
+        printf("2 - Fabriquer une hache\n");
+        printf("0 - Quitter\n");
+        printf("Votre choix : ");
+        scanf("%d", &choixOutils);
+
+        switch (choixOutils)
+        {
+        case 1:
+            fabriquerPioche(joueur, ressources);
+            break;
+        case 2:
+            fabriquerHache(joueur, ressources);
+            break;
+        case 0:
+            printf("Vous sortez du Menu Outils !\n");
+            return;
+        default:
+            printf("Choix invalide. Veuillez réessayer.\n");
+            break;
+        }
+    }
+}
+
+void fabriquerPioche(Joueur *joueur, Ressources *ressources)
 {
     int choixMateriau;
     while (1)
@@ -348,25 +456,110 @@ void fabriquerPioche()
         switch (choixMateriau)
         {
         case 1:
-            printf("Vous fabriquez une pioche en bois.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauPioche > 0)
+            {
+                printf("Vous avez déjà une pioche en bois !\n");
+                break;
+            }
+            CoutFabrication coutPioche1 = getCoutFabrication(PIOCHE, 1);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutPioche1))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauPioche = 1;
+                afficherBarreChargement(10); // Affiche la barre de progression
+                printf("Pioche en bois obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une pioche en bois !\n");
+            }
+            break;
         case 2:
-            printf("Vous fabriquez une pioche en pierre.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauPioche > 1)
+            {
+                printf("Vous avez déjà une pioche en pierre !\n");
+                break;
+            }
+            CoutFabrication coutPioche2 = getCoutFabrication(PIOCHE, 2);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutPioche2))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauPioche = 2;
+                afficherBarreChargement(20); // Affiche la barre de progression
+                printf("Pioche en pierre obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une pioche en pierre !\n");
+            }
+            break;
         case 3:
-            printf("Vous fabriquez une pioche en fer.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauPioche > 2)
+            {
+                printf("Vous avez déjà une pioche en fer !\n");
+                break;
+            }
+            CoutFabrication coutPioche3 = getCoutFabrication(PIOCHE, 3);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutPioche3))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauPioche = 3;
+                afficherBarreChargement(30); // Affiche la barre de progression
+                printf("Pioche en fer obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une pioche en fer !\n");
+            }
+            break;
         case 4:
-            printf("Vous fabriquez une pioche en or.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauPioche > 3)
+            {
+                printf("Vous avez déjà une pioche en or !\n");
+                break;
+            }
+            CoutFabrication coutPioche4 = getCoutFabrication(PIOCHE, 4);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutPioche4))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauPioche = 4;
+                afficherBarreChargement(40); // Affiche la barre de progression
+                printf("Pioche en or obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une pioche en or !\n");
+            }
+            break;
         case 5:
-            printf("Vous fabriquez une pioche en diamant.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauPioche > 4)
+            {
+                printf("Vous avez déjà une pioche en diamant !\n");
+                break;
+            }
+            CoutFabrication coutPioche5 = getCoutFabrication(PIOCHE, 5);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutPioche5))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauPioche = 5;
+                afficherBarreChargement(50); // Affiche la barre de progression
+                printf("Pioche en diamant obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une pioche en diamant !\n");
+            }
+            break;
         case 0:
             printf("Retour au menu précédent.\n");
             return;
@@ -380,7 +573,7 @@ void fabriquerPioche()
     }
 }
 
-void fabriquerHache()
+void fabriquerHache(Joueur *joueur, Ressources *ressources)
 {
     int choixMateriau;
     while (1)
@@ -399,35 +592,122 @@ void fabriquerHache()
         switch (choixMateriau)
         {
         case 1:
-            printf("Vous fabriquez une hache en bois.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauHache > 0)
+            {
+                printf("Vous avez déjà une hache en bois !\n");
+                break;
+            }
+            CoutFabrication coutHache1 = getCoutFabrication(HACHE, 1);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutHache1))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauHache = 1;
+                afficherBarreChargement(10); // Affiche la barre de progression
+                printf("Hache en bois obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une hahe en bois !\n");
+            }
+            break;
         case 2:
-            printf("Vous fabriquez une hache en pierre.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauHache > 1)
+            {
+                printf("Vous avez déjà une hache en pierre !\n");
+                break;
+            }
+            CoutFabrication coutHache2 = getCoutFabrication(HACHE, 2);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutHache2))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauHache = 2;
+                afficherBarreChargement(20); // Affiche la barre de progression
+                printf("Hache en pierre obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une hache en pierre !\n");
+            }
+            break;
         case 3:
-            printf("Vous fabriquez une hache en fer.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauHache > 2)
+            {
+                printf("Vous avez déjà une hache en fer !\n");
+                break;
+            }
+            CoutFabrication coutHache3 = getCoutFabrication(HACHE, 3);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutHache3))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauHache = 3;
+                afficherBarreChargement(30); // Affiche la barre de progression
+                printf("Hache en fer obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une hache en fer !\n");
+            }
+            break;
         case 4:
-            printf("Vous fabriquez une hache en or.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauHache > 3)
+            {
+                printf("Vous avez déjà une hache en or !\n");
+                break;
+            }
+            CoutFabrication coutHache4 = getCoutFabrication(HACHE, 4);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutHache4))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauHache = 4;
+                afficherBarreChargement(40); // Affiche la barre de progression
+                printf("Hache en or obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une hache en or !\n");
+            }
+            break;
         case 5:
-            printf("Vous fabriquez une hache en diamant.\n");
-            // Ajouter la logique pour consommer les ressources nécessaires
-            return;
+            if (joueur->niveauHache > 4)
+            {
+                printf("Vous avez déjà une hache en diamant !\n");
+                break;
+            }
+            CoutFabrication coutHache5 = getCoutFabrication(HACHE, 5);
+            sem_wait(&ressources->semaphore);
+            if (verifierEtConsommerRessources(ressources, coutHache5))
+            {
+                sem_post(&ressources->semaphore);
+                joueur->niveauHache = 5;
+                afficherBarreChargement(50); // Affiche la barre de progression
+                printf("Hache en diamant obtenu !\n");
+            }
+            else
+            {
+                sem_post(&ressources->semaphore);
+                printf("Vous n'avez pas assez de ressources pour fabriquer une hache en diamant !\n");
+            }
+            break;
         case 0:
-            printf("Retour au menu précédent.\n");
             return;
         default:
             printf("Choix invalide. Veuillez réessayer.\n");
             break;
         }
-        printf("\nAppuyez sur Entrée pour continuer...");
-        getchar();
-        getchar(); // Pause avant le rafraîchissement
+        if (choixMateriau != 0)
+        {
+            printf("\nAppuyez sur Entrée pour continuer ...");
+            getchar();
+            getchar(); // Pause avant le rafraîchissement
+        }
     }
 }
 
@@ -438,39 +718,104 @@ const char *getNomRessource(RessourceType type)
     return noms[type];
 }
 
-void recolterRessource(Joueur *joueur, int *ressources, RessourceType type) {
-    int quantite = 1; // Quantité par défaut
+void recolterRessource(Joueur *joueur, Ressources *ressources, RessourceType type)
+{
+    int quantite = 10; // Quantité par défaut
 
-    // Ajuster la quantité récoltée selon l'outil
-    if (joueur->outil.type == HACHE && type == BOIS) {
-        quantite *= (joueur->outil.niveau + 1); // Double la récolte pour chaque niveau
-    } else if (joueur->outil.type == PIOCHE && type != BOIS) {
-        quantite *= (joueur->outil.niveau + 1); // Double la récolte pour chaque niveau
+    if (type == BOIS)
+    {
+        if (joueur->niveauHache > 0)
+        {
+            quantite = (1 << joueur->niveauHache); // 2^niveauHache
+        }
+    }
+    else
+    {
+        if (joueur->niveauPioche == 0)
+        {
+            printf("Vous avez besoin d'une pioche pour miner %s !\n", getNomRessource(type));
+            getchar();
+            getchar();
+            return;
+        }
+
+        switch (type)
+        {
+        case PIERRE:
+            if (joueur->niveauPioche >= 1)
+            {
+                quantite = (1 << (joueur->niveauPioche - 1)); // 2^niveauPioche
+            }else{
+                printf("Vous avez besoin d'une pioche en bois pour miner %s !\n", getNomRessource(type));
+                getchar();
+                getchar();
+            }
+            break;
+        case FER:
+            if (joueur->niveauPioche >= 2)
+            {
+                quantite = (1 << (joueur->niveauPioche - 2)); // 2^(niveauPioche-1)
+            }else{
+                printf("Vous avez besoin d'une pioche en pierre pour miner %s !\n", getNomRessource(type));
+                getchar();
+                getchar();
+            }
+            break;
+        case OR:
+            if (joueur->niveauPioche >= 3)
+            {
+                quantite = (1 << (joueur->niveauPioche - 3)); // 2^(niveauPioche-2)
+            }else{
+                printf("Vous avez besoin d'une pioche en fer pour miner %s !\n", getNomRessource(type));
+                getchar();
+                getchar();
+            }
+            break;
+        case DIAMANT:
+            if (joueur->niveauPioche >= 4)
+            {
+                quantite = (1 << (joueur->niveauPioche - 4)); // 2^(niveauPioche-3)
+            }else{
+                printf("Vous avez besoin d'une en or pioche pour miner %s !\n", getNomRessource(type));
+                getchar();
+                getchar();
+            }
+            break;
+        default:
+            printf("Type de ressource inconnu !\n");
+            return;
+        }
     }
 
     printf("Récolte en cours : %s...\n", getNomRessource(type));
     afficherBarreChargement(joueur->recolteTemps); // Affiche la barre de progression
-    ressources[type] += quantite;
-    printf("Vous avez récolté %d unité(s) de %s. Total : %d\n", quantite, getNomRessource(type), ressources[type]);
-}
 
-// Fonction pour fabriquer un outil
-void fabriquerOutil(Joueur *joueur, int *ressources, OutilType outilType, int niveau)
-{
-    const int cout[] = {30, 50, 80, 100}; // Coût pour chaque niveau
-    if (ressources[BOIS] < cout[niveau - 1])
+    // Protection de l'accès à la mémoire partagée
+    sem_wait(&ressources->semaphore);
+    switch (type)
     {
-        printf("Pas assez de bois pour fabriquer l'outil !\n");
-        return;
+    case BOIS:
+        ressources->bois += quantite;
+        break;
+    case PIERRE:
+        ressources->pierre += quantite;
+        break;
+    case FER:
+        ressources->fer += quantite;
+        break;
+    case OR:
+        ressources->or += quantite;
+        break;
+    case DIAMANT:
+        ressources->diamant += quantite;
+        break;
+    default:
+        printf("Type de ressource inconnu !\n");
+        break;
     }
+    sem_post(&ressources->semaphore);
 
-    ressources[BOIS] -= cout[niveau - 1];
-    joueur->outil.type = outilType;
-    joueur->outil.niveau = niveau;
-
-    printf("Vous avez fabriqué un %s de niveau %d.\n",
-           outilType == HACHE ? "hache" : "pioche",
-           niveau);
+    printf("Vous avez récolté %d unité(s) de %s.\n", quantite, getNomRessource(type));
 }
 
 void afficherRessources(Ressources *ressources)
@@ -490,7 +835,7 @@ void afficherRessources(Ressources *ressources)
 int main()
 {
 
-    Joueur joueur = {{MAIN, 0}, 5}; // Joueur avec main par défaut et 5 secondes par récolte
+    Joueur joueur = {0, 0, 1}; // Pas de hache, pas de pioche, temps de récolte de 5 secondes
 
     // Clé pour la mémoire partagée
     const char *pathname = "README.md";
@@ -519,11 +864,11 @@ int main()
     }
 
     // Initialisation des ressources et du sémaphore
-    ressources->bois = 0;
-    ressources->pierre = 0;
-    ressources->fer = 0;
-    ressources->or = 0;
-    ressources->diamant = 0;
+    // ressources->bois = 0;
+    // ressources->pierre = 0;
+    // ressources->fer = 0;
+    // ressources->or = 0;
+    // ressources->diamant = 0;
     sem_init(&ressources->semaphore, 1, 1); // Sémaphore partagé entre processus
 
     // Création d'un thread ouvrier
@@ -563,7 +908,7 @@ int main()
             gererOuvriers();
             break;
         case 4:
-            fabriquerOutils();
+            fabriquerOutils(&joueur, ressources);
             break;
         case 5:
             afficherRessources(ressources);
