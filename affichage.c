@@ -16,30 +16,41 @@
 #define CYAN "\033[36m"
 #define VERT "\033[32m"
 
+// Symboles pour les ressources
+#define BOIS_ICON "🌲"
+#define PIERRE_ICON "🪨"
+#define FER_ICON "⛓️"
+#define OR_ICON "💰"
+#define DIAMANT_ICON "💎"
+#define ARGENT_ICON "🪙"
+
+// Fonction d'affichage du titre
 void print_header()
 {
+    system("clear");
     printf("\n%s=========================================%s\n", BOLD, RESET);
-    printf("%s|      🛠️  Gestion des Ressources      |\n", CYAN);
+    printf("|      🛠️  GESTION DES RESSOURCES      |\n");
     printf("%s=========================================%s\n\n", BOLD, RESET);
 }
 
+// Fonction pour afficher la table des ressources
 void print_table(Ressources *ressources)
 {
-    printf("%s=========================================%s\n", BOLD, RESET);
-    printf("%s%-12s %-12s%s\n", BOLD, "Ressource", "Quantité", RESET);
-    printf("%s-----------------------------------------%s\n", BOLD, RESET);
+    printf("%s┌───────────────────────┬───────────────┐%s\n", GRIS_CLAIR, RESET);
+    printf("%s│   Ressource           │   Quantité    │%s\n", BOLD, RESET);
+    printf("%s├───────────────────────┼───────────────┤%s\n", GRIS_CLAIR, RESET);
 
-    printf("%s%-12s%s %d\n", MARRON, "Bois", RESET, ressources->bois);
-    printf("%s%-12s%s %d\n", GRIS_FONCE, "Pierre", RESET, ressources->pierre);
-    printf("%s%-12s%s %d\n", GRIS_CLAIR, "Fer", RESET, ressources->fer);
-    printf("%s%-12s%s %d\n", JAUNE_OR, "Or", RESET, ressources->or);
-    printf("%s%-12s%s %d\n", CYAN, "Diamant", RESET, ressources->diamant);
-    printf("%s%-12s%s %d\n", VERT, "Argent", RESET, ressources->argent);
+    printf("%s│ %-23s │ %-13d │%s\n", MARRON, BOIS_ICON " Bois", ressources->bois, RESET);
+    printf("%s│ %-24s │ %-13d │%s\n", GRIS_FONCE, PIERRE_ICON " Pierre", ressources->pierre, RESET);
+    printf("%s│ %-26s │ %-13d │%s\n", GRIS_CLAIR, FER_ICON " Fer", ressources->fer, RESET);
+    printf("%s│ %-23s │ %-13d │%s\n", JAUNE_OR, OR_ICON " Or", ressources->or, RESET);
+    printf("%s│ %-23s │ %-13d │%s\n", CYAN, DIAMANT_ICON " Diamant", ressources->diamant, RESET);
+    printf("%s│ %-24s │ %-13d │%s\n", VERT, ARGENT_ICON " Argent", ressources->argent, RESET);
 
-    printf("%s=========================================%s\n", BOLD, RESET);
+    printf("%s└───────────────────────┴───────────────┘%s\n", GRIS_CLAIR, RESET);
 }
 
-
+// Fonction principale
 int main()
 {
     const char *pathname = "README.md"; // Même fichier que celui utilisé dans le main
@@ -67,12 +78,10 @@ int main()
     while (1)
     {
         sem_wait(&ressources->semaphore);
-        system("clear"); // Efface l'écran pour un affichage propre
-
         print_header();
         print_table(ressources);
-
         sem_post(&ressources->semaphore);
+
         sleep(1); // Attendre 1 seconde
     }
 
