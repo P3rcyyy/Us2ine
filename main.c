@@ -1,6 +1,7 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
+#include <sys/msg.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +10,29 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include "main.h"
+
+#define RESET "\033[0m"
+#define BOLD "\033[1m"
+#define CYAN "\033[36m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define RED "\033[31m"
+#define BLUE "\033[34m"
+#define MAGENTA "\033[35m"
+#define GREY "\033[90m"
+#define GREY_LIGHT "\033[37m"
+#define MAROON "\033[38;5;130m"
+#define BOIS_ICON "🌲"
+#define PIERRE_ICON "🪨"
+#define FER_ICON "⛓️"
+#define OR_ICON "🪙"
+#define ARGENT_ICON "💰"
+#define DIAMANT_ICON "💎"
+#define WORKER_ICON "👷"
+#define TOOL_ICON "🔧"
+#define EXIT_ICON "🚪"
+#define PICKAXE_ICON "⛏️"
+#define AXE_ICON "🪓"
 
 // Fonction d'un ouvrier
 void *thread_ouvrier(void *arg)
@@ -174,13 +198,13 @@ void recupererRessources(Joueur *joueur, Ressources *ressources)
     while (1)
     {
         clearScreen(); // Rafraîchit l'écran
-        printf("\n=== Menu Ressources ===\n");
-        printf("1 - Couper du bois\n");
-        printf("2 - Miner de la pierre\n");
-        printf("3 - Miner du fer\n");
-        printf("4 - Miner de l'or\n");
-        printf("5 - Miner du diamant\n");
-        printf("0 - Quitter\n");
+        printf("\n%s=== Menu Ressources ===%s\n", BOLD, RESET);
+        printf("%s1 - %s Couper du bois%s\n", GREEN, BOIS_ICON, RESET);
+        printf("%s2 - %s  Miner de la pierre%s\n", GREY, PIERRE_ICON, RESET);
+        printf("%s3 - %s  Miner du fer%s\n", GREY_LIGHT, FER_ICON, RESET);
+        printf("%s4 - %s  Miner de l'or%s\n", YELLOW, OR_ICON, RESET);
+        printf("%s5 - %s Miner du diamant%s\n", CYAN, DIAMANT_ICON, RESET);
+        printf("%s0 - %s Quitter%s\n", RED, EXIT_ICON, RESET);
         printf("Votre choix : ");
         scanf("%d", &choixRessource);
 
@@ -222,13 +246,13 @@ void vendreRessources()
     while (1)
     {
         clearScreen(); // Rafraîchit l'écran
-        printf("\n=== Menu Ventes ===\n");
-        printf("1 - Vendre du bois\n");
-        printf("2 - Vendre de la pierre\n");
-        printf("3 - Vendre du fer\n");
-        printf("4 - Vendre de l'or\n");
-        printf("5 - Vendre du diamant\n");
-        printf("0 - Quitter\n");
+        printf("\n%s=== Menu Ventes ===%s\n", BOLD, RESET);
+        printf("%s1 - %s Vendre du bois%s\n", GREEN, BOIS_ICON, RESET);
+        printf("%s2 - %s  Vendre de la pierre%s\n", GREY, PIERRE_ICON, RESET);
+        printf("%s3 - %s  Vendre du fer%s\n", GREY_LIGHT, FER_ICON, RESET);
+        printf("%s4 - %s  Vendre de l'or%s\n", YELLOW, OR_ICON, RESET);
+        printf("%s5 - %s Vendre du diamant%s\n", CYAN, DIAMANT_ICON, RESET);
+        printf("%s0 - %s Quitter%s\n", RED, EXIT_ICON, RESET);
         printf("Votre choix : ");
         scanf("%d", &choixVendre);
 
@@ -371,10 +395,10 @@ void vendreQuantite(int ressource)
     while (1)
     {
         clearScreen(); // Rafraîchit l'écran
-        printf("\n=== Menu Vente : %s ===\n", nomsRessources[ressource]);
-        printf("1 - Tout vendre\n");
-        printf("2 - Vendre une quantité personnalisée\n");
-        printf("0 - Quitter\n");
+        printf("\n%s=== Menu Vente : %s%s ===%s\n", BOLD, nomsRessources[ressource], BOLD, RESET);
+        printf("%s1 - %s  Tout vendre%s\n", YELLOW, OR_ICON, RESET);
+        printf("%s2 - %s Vendre une quantité personnalisée%s\n", GREY, TOOL_ICON, RESET);
+        printf("%s0 - %s Quitter%s\n", RED, EXIT_ICON, RESET);
         printf("Votre choix : ");
         scanf("%d", &choixQuantite);
 
@@ -400,9 +424,6 @@ void vendreQuantite(int ressource)
             printf("Choix invalide. Veuillez réessayer.\n");
             break;
         }
-        printf("\nAppuyez sur Entrée pour continuer...");
-        getchar();
-        getchar(); // Pause avant le rafraîchissement
     }
 }
 
@@ -412,10 +433,10 @@ void fabriquerOutils(Joueur *joueur, Ressources *ressources)
     while (1)
     {
         clearScreen(); // Rafraîchit l'écran
-        printf("\n=== Menu Outils ===\n");
-        printf("1 - Fabriquer une pioche\n");
-        printf("2 - Fabriquer une hache\n");
-        printf("0 - Quitter\n");
+        printf("\n%s=== Menu Outils ===%s\n", BOLD, RESET);
+        printf("%s1 -%s  Fabriquer une pioche%s\n", BLUE, PICKAXE_ICON, RESET);
+        printf("%s2 -%s Fabriquer une hache%s\n", MAROON, AXE_ICON, RESET);
+        printf("%s0 -%s Quitter%s\n", RED, EXIT_ICON, RESET);
         printf("Votre choix : ");
         scanf("%d", &choixOutils);
 
@@ -443,13 +464,14 @@ void fabriquerPioche(Joueur *joueur, Ressources *ressources)
     while (1)
     {
         clearScreen(); // Rafraîchit l'écran
-        printf("\n=== Menu Fabrication : Pioche ===\n");
-        printf("1 - Pioche en bois\n");
-        printf("2 - Pioche en pierre\n");
-        printf("3 - Pioche en fer\n");
-        printf("4 - Pioche en or\n");
-        printf("5 - Pioche en diamant\n");
-        printf("0 - Quitter\n");
+        // Affiche le menu de fabrication de la pioche avec couleurs et icônes
+        printf("\n%s=== Menu Fabrication :%s  Pioche ===%s\n", BOLD, PICKAXE_ICON, RESET);
+        printf("%s1 -%s  Pioche en bois%s\n", GREEN, PICKAXE_ICON, RESET);
+        printf("%s2 -%s  Pioche en pierre%s\n", GREY, PICKAXE_ICON, RESET);
+        printf("%s3 -%s  Pioche en fer%s\n", GREY_LIGHT, PICKAXE_ICON, RESET);
+        printf("%s4 -%s  Pioche en or%s\n", YELLOW, PICKAXE_ICON, RESET);
+        printf("%s5 -%s  Pioche en diamant%s\n", CYAN, PICKAXE_ICON, RESET);
+        printf("%s0 - Quitter%s\n", RED, RESET);
         printf("Votre choix : ");
         scanf("%d", &choixMateriau);
 
@@ -579,16 +601,16 @@ void fabriquerHache(Joueur *joueur, Ressources *ressources)
     while (1)
     {
         clearScreen(); // Rafraîchit l'écran
-        printf("\n=== Menu Fabrication : Hache ===\n");
-        printf("1 - Hache en bois\n");
-        printf("2 - Hache en pierre\n");
-        printf("3 - Hache en fer\n");
-        printf("4 - Hache en or\n");
-        printf("5 - Hache en diamant\n");
-        printf("0 - Quitter\n");
+        // Affiche le menu de fabrication de la hache avec couleurs et icônes
+        printf("\n%s=== Menu Fabrication :%s Hache ===%s\n", BOLD, AXE_ICON, RESET);
+        printf("%s1 -%s Hache en bois%s\n", GREEN, AXE_ICON, RESET);
+        printf("%s2 -%s Hache en pierre%s\n", GREY, AXE_ICON, RESET);
+        printf("%s3 -%s Hache en fer%s\n", GREY_LIGHT, AXE_ICON, RESET);
+        printf("%s4 -%s Hache en or%s\n", YELLOW, AXE_ICON, RESET);
+        printf("%s5 -%s Hache en diamant%s\n", CYAN, AXE_ICON, RESET);
+        printf("%s0 - Quitter%s\n", RED, RESET);
         printf("Votre choix : ");
         scanf("%d", &choixMateriau);
-
         switch (choixMateriau)
         {
         case 1:
@@ -745,7 +767,9 @@ void recolterRessource(Joueur *joueur, Ressources *ressources, RessourceType typ
             if (joueur->niveauPioche >= 1)
             {
                 quantite = (1 << (joueur->niveauPioche - 1)); // 2^niveauPioche
-            }else{
+            }
+            else
+            {
                 printf("Vous avez besoin d'une pioche en bois pour miner %s !\n", getNomRessource(type));
                 getchar();
                 getchar();
@@ -755,7 +779,9 @@ void recolterRessource(Joueur *joueur, Ressources *ressources, RessourceType typ
             if (joueur->niveauPioche >= 2)
             {
                 quantite = (1 << (joueur->niveauPioche - 2)); // 2^(niveauPioche-1)
-            }else{
+            }
+            else
+            {
                 printf("Vous avez besoin d'une pioche en pierre pour miner %s !\n", getNomRessource(type));
                 getchar();
                 getchar();
@@ -765,7 +791,9 @@ void recolterRessource(Joueur *joueur, Ressources *ressources, RessourceType typ
             if (joueur->niveauPioche >= 3)
             {
                 quantite = (1 << (joueur->niveauPioche - 3)); // 2^(niveauPioche-2)
-            }else{
+            }
+            else
+            {
                 printf("Vous avez besoin d'une pioche en fer pour miner %s !\n", getNomRessource(type));
                 getchar();
                 getchar();
@@ -775,7 +803,9 @@ void recolterRessource(Joueur *joueur, Ressources *ressources, RessourceType typ
             if (joueur->niveauPioche >= 4)
             {
                 quantite = (1 << (joueur->niveauPioche - 4)); // 2^(niveauPioche-3)
-            }else{
+            }
+            else
+            {
                 printf("Vous avez besoin d'une en or pioche pour miner %s !\n", getNomRessource(type));
                 getchar();
                 getchar();
@@ -835,6 +865,14 @@ void afficherRessources(Ressources *ressources)
 int main()
 {
 
+    // Création de la file de messages
+    int msgid = msgget(MESSAGE_QUEUE_KEY, IPC_CREAT | 0666);
+    if (msgid == -1)
+    {
+        perror("msgget");
+        return 1;
+    }
+
     Joueur joueur = {0, 0, 1}; // Pas de hache, pas de pioche, temps de récolte de 5 secondes
 
     // Clé pour la mémoire partagée
@@ -885,14 +923,14 @@ int main()
 
     while (1)
     {
-        clearScreen();
-        printf("\n=== Menu Principal ===\n");
-        printf("1 - Récupérer ressources\n");
-        printf("2 - Vendre ressources\n");
-        printf("3 - Gérer les ouvriers\n");
-        printf("4 - Fabriquer des outils\n");
-        printf("5 - Afficher Ressources\n");
-        printf("0 - Quitter\n");
+        clearScreen(); // Rafraîchit l'écran
+        printf("\n%s=== Menu Principal ===%s\n", BOLD, RESET);
+        printf("%s1 - %s%sRécupérer ressources%s\n", GREEN, PICKAXE_ICON, AXE_ICON, RESET);
+        printf("%s2 - %s  Vendre ressources%s\n", YELLOW, OR_ICON, RESET);
+        printf("%s3 - %s Gérer les ouvriers%s\n", GREY, WORKER_ICON, RESET);
+        printf("%s4 - %s Fabriquer des outils%s\n", MAROON, TOOL_ICON, RESET);
+        printf("%s5 - %s Afficher Ressources%s\n", CYAN, DIAMANT_ICON, RESET);
+        printf("%s0 - %s Quitter%s\n", RED, EXIT_ICON, RESET);
         printf("Votre choix : ");
         scanf("%d", &choix);
 
@@ -914,19 +952,18 @@ int main()
             afficherRessources(ressources);
             break;
         case 0:
-            printf("Au revoir !\n");
+            printf("Au plaisir de vous revoir dans l'Us2ine !\n");
             // pthread_cancel(ouvrier);
             // pthread_join(ouvrier, NULL);
             sem_destroy(&ressources->semaphore);
-            if (shmdt(ressources) == -1)
+            struct message msg;
+            msg.message_type = 1;
+            msg.signal = 1; // Signal de fin
+
+            if (msgsnd(msgid, &msg, sizeof(msg.signal), 0) == -1)
             {
-                perror("shmdt");
+                perror("msgsnd");
             }
-            if (shmctl(shmid, IPC_RMID, NULL) == -1)
-            {
-                perror("shmctl");
-            }
-            printf("Segment de mémoire supprimé.\n");
             exit(0);
         default:
             printf("Choix invalide. Veuillez réessayer.\n");

@@ -11,6 +11,15 @@
 #include <semaphore.h>
 #include <stdlib.h>
 
+// Structure du message
+struct message {
+    long message_type;
+    int signal;
+};
+
+// Clé pour la boîte aux lettres
+#define MESSAGE_QUEUE_KEY 7171
+
 // Définition des ressources
 typedef struct Ressources {
     int bois;
